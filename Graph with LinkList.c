@@ -1,6 +1,7 @@
-#include<stdio.h> //链表实现的单向图
+#include<stdio.h> //链表实现的单向图,双向图    深度优先搜索，广度优先搜索
 #include<stdlib.h>
 #include<stdbool.h>
+#include"Queuestruct.h"
 #define MaxVertex 100
 
 
@@ -26,14 +27,19 @@ struct GraphNode{
     AdjList G;
 
 };
+
+
 void visit(Vertex V);
 void DFS(ListGraph LG,Vertex V);
+void BFS(ListGraph LG,Vertex V);
+int IfEdge_double(ListGraph LG, Vertex V1, Vertex V2);
 ListGraph BuildGraph(int Vertexnum);
-void insertEdge(ListGraph LG, Edge E);
+void insertEdge_single(ListGraph LG, Edge E);
+void insertEdge_double(ListGraph LG,Edge E);
 
 int main(void)
 {
-    int N,v1,v2;
+    int N,v1;
     Edge E=malloc(sizeof(struct ENode));
     scanf("%d",&N);
     ListGraph LG=BuildGraph(N);
@@ -41,14 +47,14 @@ int main(void)
     for(int i=0;i<N;i++)
     {
         scanf("%d %d",&E->V1, &E->V2);
-        insertEdge(LG,E);
+        insertEdge_double(LG,E);
     }
     while(1)
     {
         for(int i=0;i<100;i++)
             visited[i]=0;
         scanf("%d",&v1);
-        DFS(LG,v1);
+        BFS(LG,v1);
     }
     return 0;
 }
@@ -64,49 +70,27 @@ ListGraph BuildGraph(int Vertexnum)
     return LG;
 }
 
-void insertEdge(ListGraph LG, Edge E)
+void insertEdge_single(ListGraph LG, Edge E)
 {
     PtrToadjvNode NewNode=malloc(sizeof(struct adjvNode));
     NewNode->Vindex=E->V2;
     NewNode->next=LG->G[E->V1].FirstEdge;
     LG->G[E->V1].FirstEdge=NewNode;
 }
-
-int ifconnection(ListGraph LG, Vertex V1, Vertex V2)
+void insertEdge_double(ListGraph LG, Edge E)
 {
-    int flag;
+    PtrToadjvNode NewNode=malloc(sizeof(struct adjvNode));
+    NewNode->Vindex=E->V2;
+    NewNode->next=LG->G[E->V1].FirstEdge;
+    LG->G[E->V1].FirstEdge=NewNode;
+    PtrToadjvNode NewNode2 =malloc(sizeof(struct adjvNode));
+    NewNode2->Vindex=E->V1;
+    NewNode2->next=LG->G[E->V2].FirstEdge;
+    LG->G[E->V2].FirstEdge=NewNode2;
 
-    PtrToadjvNode temp;
-    temp=LG->G[V1].FirstEdge;
-    while(temp)
-    {
-        if(temp->Vindex==V2)
-            flag=1;
-        else
-        {
-
-                flag=ifconnection(LG,temp->Vindex,V2);
-                temp=temp->next;
-                if (flag==1)
-                    return 1;
-        }
-    }
-    temp=LG->G[V2].FirstEdge;
-    while(temp)
-    {
-        if(temp->Vindex==V1)
-            return 1;
-        else
-        {
-            flag=ifconnection(LG,V1,temp->Vindex);
-            temp=temp->next;
-            if(flag==1)
-                return 1;
-
-        }
-    }
-    return 0;
 }
+
+
 void visit(Vertex V)
 {
     printf("%d  ", V);
@@ -119,4 +103,33 @@ void DFS(ListGraph LG,Vertex V)
     for(W=LG->G[V].FirstEdge;W;W=W->next)
         if(!visited[W->Vindex])
             DFS(LG,W->Vindex);
+}
+int IfEdge_double(ListGraph LG, Vertex V1,Vertex V2)
+{
+    PtrToadjvNode temp=LG->G[V1].FirstEdge;
+    while(temp)
+    {
+        if(temp->Vindex==V2)
+            return 1;
+        temp=temp->next;
+    }
+    return 0;
+}
+void BFS(ListGraph LG, Vertex V)
+{
+    Queue Q=CreateQueue(LG->Nvertex);
+    PtrToadjvNode W;
+    Enqueue(Q,V);
+    visit(V);
+    visited[V]=true;
+    while(!IsEmpty(Q))
+    {
+        V=Dequeue(Q);
+        for(W=LG->G[V].FirstEdge;W && !visited[W->Vindex];W=W->next)
+        {
+            Enqueue(Q,W->Vindex);
+            visit(W->Vindex);
+            visited[W->Vindex]=true;
+        }
+    }
 }
